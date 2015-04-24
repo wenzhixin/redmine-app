@@ -20,6 +20,15 @@ gulp.task('copy', ['clean'], function () {
 
     gulp.src('icon*.png')
         .pipe(gulp.dest(target));
+
+    gulp.src('bower_components/bootstrap/fonts/**/*')
+        .pipe(gulp.dest(target + '/fonts/'));
+
+    gulp.src('bower_components/flat-ui/fonts/**/*')
+        .pipe(gulp.dest(target + '/fonts/'));
+
+    gulp.src('bower_components/fontawesome/fonts/**/*')
+        .pipe(gulp.dest(target + '/fonts/'));
 });
 
 gulp.task('html', ['clean'], function () {
