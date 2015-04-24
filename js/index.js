@@ -298,7 +298,7 @@ $(function () {
                 $.each(issue.attachments, function (i, attachment) {
                     var reg = new RegExp(sprintf('img src="%s"', attachment.filename), 'g');
                     issue.content = issue.content.replace(reg,
-                        sprintf('img src="%s"', attachment.content_url));
+                        sprintf('img data-src="%s?key=%s"', attachment.content_url, models.key));
                 });
 
                 issue.tracker = formatter.tracker(issue.tracker.name, issue);
