@@ -1,0 +1,18 @@
+{
+    "name": "Redmine App",
+    "description": "Redmine App",
+    "version": "1.0.0",
+    "manifest_version": 2,
+    "update_url": "http://clients2.google.com/service/update2/crx",
+    "icons": {
+        "128": "icon128.png"
+    },
+    "options_page": "options.html",
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+    "permissions": ["storage", "unlimitedStorage", "webRequest", "webRequestBlocking", "cookies", "\u003Call_urls>", "clipboardWrite"],
+    "app": {
+        "launch": {
+            "local_path": "index.html"
+        }
+    }
+}

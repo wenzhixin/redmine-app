@@ -1,0 +1,112 @@
+.table img {
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+}
+
+.table tr.unread {
+    font-weight: bold;
+}
+
+.none {display: none;}
+
+.ml20 {margin-left: 20px;}
+
+.fixed-table-pagination .pagination a {
+    padding: 12px 10px;
+    line-height: 16px;
+}
+
+.pagination li {
+    margin-right: 0;
+}
+
+.pagination li.disabled.active > a,
+.pagination li.disabled.active > span {
+    color: #fff;
+    background-color: #1abc9c;
+}
+
+.checkbox, .radio {
+    padding: 0;
+    margin: 0;
+}
+.fixed-table-container .bs-checkbox .th-inner {
+    padding: 0 8px 32px;
+}
+
+.fixed-table-toolbar .columns label label {
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.click-here {
+    border-bottom: dashed 1px #0088cc;
+    cursor: pointer;
+}
+
+/* priority color */
+.label {
+    width: 30px;
+    display: inline-block;
+}
+
+.label-immediate {
+    background: BlueViolet;
+}
+
+.label-urgent {
+    background: #d9534f;
+}
+
+.label-high {
+    background: #d1761f;
+}
+
+.label-normal {
+    background-color: #f0ad4e;
+}
+
+.label-low {
+    background: #aed2e8;
+}
+
+/* content */
+.modal {
+    width: 600px;
+}
+
+.content {
+    margin-left: 58px;
+}
+
+.content, .content p {
+    font-size: 14px;
+}
+
+.content img {
+    max-width: 100%;
+}
+
+.item-header .avatar {
+    float: left;
+    margin-top: 3px;
+    margin-left: -58px;
+    width: 48px;
+    height: 48px;
+    border-radius: 5px;
+}
+
+.item-header .time:before {
+    content: "\00b7";
+    padding: 0 5px;
+}
+
+.item-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    min-height: 20px;
+}

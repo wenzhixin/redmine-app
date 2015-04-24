@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redmine App</title>
+    <link rel="stylesheet" href="css/bower.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+
+<div id="loading">
+    <div class="loading-spinner" style="width: 200px; margin-left: -100px;">
+        <div class="progress progress-striped active">
+            <div class="progress-bar" style="width: 100%;"></div>
+        </div>
+    </div>
+</div>
+
+<div id="main" class="none">
+    <div id="toolbar" class="form-inline">
+        <div class="form-group">
+            <label for="status">Status: </label>
+            <select id="status" multiple="multiple" class="form-control multiselect-info">
+                <option value="1" selected>New</option>
+                <option value="2" selected>In Progress</option>
+                <option value="7" selected>Reopened</option>
+                <option value="4" selected>Feedback</option>
+                <option value="3">Resolved</option>
+                <option value="6">Rejected</option>
+                <option value="16">Verified</option>
+                <option value="5">Closed</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="assignedToMe">Assigned to me: </label>
+            <input id="assignedToMe" type="checkbox" name="default-switch">
+        </div>
+        <div class="form-group ml20">
+            <div class="btn-group">
+                <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+                    More actions <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li id="markRead"><a href="javascript:void(0)">Mark selections as read</a></li>
+                    <li id="markUnread"><a href="javascript:void(0)">Mark selections as unread</a></li>
+                    <li><a href="options.html" target="_blank">Settings</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <table id="table"
+           data-height="500"
+           data-pagination="true"
+           data-side-pagination="server"
+           data-flat="true"
+           data-show-toggle="true"
+           data-show-refresh="true"
+           data-show-columns="true"
+           data-toolbar="#toolbar"
+           data-click-to-select="true"
+           data-row-style="handler.rowStyle"
+           data-query-params="handler.query"
+           data-response-handler="handler.response">
+        <thead>
+        <tr>
+            <th data-field="state"
+                data-checkbox="true"
+                data-click-to-select="false"></th>
+            <th data-field="tracker.name"
+                data-width="120"
+                data-click-to-select="false"
+                data-formatter="formatter.tracker">Tracker</th>
+            <th data-field="status.name"
+                data-width="150"
+                data-formatter="formatter.status">Status</th>
+            <th data-field="subject"
+                data-click-to-select="false"
+                data-switchable="false"
+                data-formatter="formatter.subject"
+                data-events="events.subject">Subject</th>
+            <th data-field="updated_on"
+                data-width="140"
+                data-formatter="formatter.date">Updated</th>
+            <th data-field="project.name"
+                data-visible="false">Project</th>
+        </tr>
+        </thead>
+    </table>
+</div>
+
+<div id="issue" class="modal fade" tabindex="-1"></div>
+
+<script id="issueTpl" type="text/sprintf">
+    <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <div>%(tracker)s %(subject)s</div>
+    </div>
+    <div class="modal-body">
+        %(content)s
+    </div>
+</script>
+
+<script id="itemTpl" type="text/sprintf">
+    <div class="content">
+        <div class="item-header">
+                <span>
+                    %(avatar)s
+                    <strong>%(author)s</strong>
+                </span>
+            <small class="time">%(time)s</small>
+        </div>
+        <div class="item-text">%(text)s</div>
+    </div>
+</script>
+
+<script src="js/bower.js"></script>
+<script src="js/index.js"></script>
+<script>
+</script>
+</body>
+</html>
