@@ -1,17 +1,37 @@
 'use strict';
 
 $(function () {
-    var baseUrl = localStorage['redmine-url'],
-        users = [],
-        $loading = $('#loading'),
+    var $loading = $('#loading'),
+        $settings = $('.settings'),
+        $url = $('#url'),
+        $key = $('#key'),
         $main = $('#main'),
         $status = $('#status'),
         $assignedToMe = $('#assignedToMe'),
         $table = $('#table'),
         $issue = $('#issue'),
-        selections = [],
         issueTpl = $('#issueTpl').html(),
         itemTpl = $('#itemTpl').html();
+
+    window.models = {
+        init: function (callback) {
+            chrome.storage.local.get('redmine', function (obj) {
+                if (obj.redmine) {
+                    models.baseUrl = obj.redmine.url;
+                    models.key = obj.redmine.key;
+                    models.unreadList = obj.redmine.unreadList;
+                }
+                $url.val(models.baseUrl);
+                $key.val(models.key);
+                callback();
+            });
+        },
+        baseUrl: '',
+        key: '',
+        unreadList: {},
+        users: [],
+        selections: []
+    };
 
     window.formatter = {
         tracker: function (value, row) {
@@ -28,7 +48,7 @@ $(function () {
                     fa[value], value);
             }
             return sprintf('%s <a href="%s/issues/%s" target="_blank">#%s</a>',
-                value, baseUrl, row.id, row.id);
+                value, models.baseUrl, row.id, row.id);
         },
         status: function (value, row) {
             var priority = row['priority.name'];
@@ -59,7 +79,7 @@ $(function () {
         },
         avatar: function (user) {
             var img = '';
-            $.each(users, function (i, u) {
+            $.each(models.users, function (i, u) {
                 if (u.id === user.id) {
                     img = sprintf('http://www.gravatar.com/avatar/%s?rating=PG&size=48&default=wavatar',
                         md5(u.mail));
@@ -67,7 +87,7 @@ $(function () {
                 }
                 return true;
             });
-            return sprintf('<img title="%s" class="avatar" src="%s" data-toggle="tooltip">',
+            return sprintf('<img title="%s" class="avatar" data-src="%s" data-toggle="tooltip">',
                 user.name, img);
         }
     };
@@ -76,21 +96,43 @@ $(function () {
         getHeight: function () {
             return $(window).height();
         },
-        getUnreadList: function () {
-            return JSON.parse(localStorage['unread-list'] || '{}');
+        updateStorage: function () {
+            chrome.storage.local.set({
+                redmine: {
+                    url: models.baseUrl,
+                    key: models.key,
+                    unreadList: models.unreadList
+                }
+            });
         },
         markRead: function (issue) {
-            var list = util.getUnreadList();
-            list[issue.id] = issue.updated_on;
-            localStorage['unread-list'] = JSON.stringify(list);
+            models.unreadList[issue.id] = issue.updated_on;
+            util.updateStorage();
         },
         markUnread: function (issue) {
-            var list = util.getUnreadList();
-            delete list[issue.id];
-            localStorage['unread-list'] = JSON.stringify(list);
+            delete models.unreadList[issue.id];
+            util.updateStorage();
         },
-        getUnread: function (issue, list) {
-            return !(list.hasOwnProperty(issue.id) && list[issue.id] === issue.updated_on);
+        getUnread: function (issue) {
+            return !(models.unreadList.hasOwnProperty(issue.id) &&
+                models.unreadList[issue.id] === issue.updated_on);
+        },
+        loadImages: function ($els) {
+            $els.each(function () {
+                var $this = $(this),
+                    xhr = new XMLHttpRequest();
+
+                if (!$this.data('src')) {
+                    return;
+                }
+                xhr.open('get', $(this).data('src'), true);
+                xhr.responseType = 'blob';
+                xhr.onload = function(e) {
+                    $this.attr('src', window.URL.createObjectURL(this.response));
+                    $this.removeAttr('data-src');
+                };
+                xhr.send();
+            });
         }
     };
 
@@ -100,6 +142,7 @@ $(function () {
         },
         query: function (params) {
             params = {
+                key: models.key,
                 set_filter: 1,
                 sort: 'updated_on:desc',
                 status_id: $status.val().join('|'),
@@ -113,8 +156,8 @@ $(function () {
         },
         response: function (res) {
             $.each(res.issues, function (i, issue) {
-                issue.state = $.inArray(issue.id, selections) > -1;
-                issue.unread = util.getUnread(issue, util.getUnreadList());
+                issue.state = $.inArray(issue.id, models.selections) > -1;
+                issue.unread = util.getUnread(issue);
             });
             return {
                 total: res.total_count,
@@ -125,6 +168,21 @@ $(function () {
 
     window.events = {
         init: function () {
+            $('form').submit(function () {
+                return false;
+            });
+
+            $('#save').click(function () {
+                var url = $.trim($url.val());
+                if (url.slice(-1) === '/') {
+                    url = url.substring(0, url.length - 1);
+                }
+                models.baseUrl = url;
+                models.key = $.trim($key.val());
+                util.updateStorage();
+                view.users();
+            });
+
             $(window).resize(function () {
                 $table.bootstrapTable('resetView', {
                     height: util.getHeight()
@@ -140,10 +198,11 @@ $(function () {
                         $(this).wrap('<label class="checkbox"></label>').radiocheck();
                     }
                 });
+                util.loadImages($table.find('img'));
             });
 
             $table.on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function () {
-                selections = $.map($table.bootstrapTable('getSelections'), function (row) {
+                models.selections = $.map($table.bootstrapTable('getSelections'), function (row) {
                     return row.id;
                 });
             });
@@ -173,30 +232,34 @@ $(function () {
     };
 
     window.view = {
-        users: function (limit, callback) {
-            $.get(sprintf('%s/users.json?limit=%s', baseUrl, limit), function (data) {
+        users: function (limit) {
+            $.get(sprintf('%s/users.json', models.baseUrl), {
+                limit: limit || 100,
+                key: models.key
+            }, function (data) {
                 if (data.total_count > limit) {
-                    view.users(data.total_count, callback);
+                    view.users(data.total_count);
                     return;
                 }
-                users = data.users;
-                callback();
+                models.users = data.users;
+                view.init();
             }).fail(function () {
-                alert('Can not connect to the server, please set your redmine url!');
-                location.href = 'options.html';
+                $loading.hide();
+                $settings.show();
             });
         },
         init: function () {
             $loading.hide();
+            $settings.hide();
             $main.show();
             $table.bootstrapTable({
-                url: sprintf('%s/issues.json', baseUrl),
+                url: sprintf('%s/issues.json', models.baseUrl),
                 height: util.getHeight()
             });
 
             setInterval(function () {
                 $table.bootstrapTable('refresh', {silent: true});
-            }, 6000);
+            }, 2 * 60000);
 
             $status.select2({dropdownCssClass: 'dropdown-inverse'});
             $assignedToMe.bootstrapSwitch();
@@ -206,7 +269,10 @@ $(function () {
         },
         issue: function (row, index) {
             $('body').modalmanager('loading');
-            $.get(sprintf('%s/issues/%s.json?include=attachments,journals', baseUrl, row.id), function (data) {
+            $.get(sprintf('%s/issues/%s.json', models.baseUrl, row.id), {
+                include: 'attachments,journals',
+                key: models.key
+            }, function (data) {
                 var issue = data.issue,
                     list = [];
 
@@ -237,6 +303,7 @@ $(function () {
 
                 issue.tracker = formatter.tracker(issue.tracker.name, issue);
                 $issue.html(sprintf(issueTpl, issue)).modal();
+                util.loadImages($issue.find('img'));
             });
 
             row.unread = false;
@@ -249,5 +316,5 @@ $(function () {
     };
 
     events.init();
-    view.users(100, view.init);
+    models.init(view.users);
 });

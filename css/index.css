@@ -110,3 +110,8 @@
     word-wrap: break-word;
     min-height: 20px;
 }
+
+.settings {
+    margin: 100px auto;
+    width: 400px;
+}
