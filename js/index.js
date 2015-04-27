@@ -176,7 +176,8 @@ $(function () {
             });
             return {
                 total: res.total_count,
-                rows: res.issues
+                rows: res.issues,
+                fixedScroll: true
             }
         }
     };

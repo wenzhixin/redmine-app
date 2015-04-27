@@ -4,7 +4,7 @@
         'bower_components/bootstrap/dist/js/bootstrap.min.js',
         'bower_components/flat-ui/dist/js/flat-ui.js',
         'bower_components/bootstrap-table/src/bootstrap-table.js',
-        'bower_components/bootstrap-table/dist/extensions/flatJSON/bootstrap-table-flatJSON.min.js',
+        'bower_components/bootstrap-table/src/extensions/flatJSON/bootstrap-table-flatJSON.js',
         'bower_components/select2/select2.min.js',
         'bower_components/momentjs/min/moment.min.js',
         'bower_components/sprintf/dist/sprintf.min.js',

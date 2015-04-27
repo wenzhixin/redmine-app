@@ -76,7 +76,9 @@
 
 /* content */
 .modal {
-    width: 600px;
+    width: 80%;
+    left: 10%;
+    margin-left: 0;
 }
 
 .content {
@@ -84,7 +86,7 @@
 }
 
 .content, .content p {
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .content img {
