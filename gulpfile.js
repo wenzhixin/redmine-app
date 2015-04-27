@@ -54,6 +54,10 @@ gulp.task('js', ['clean'], function () {
         .pipe(concatScript())
         .pipe(uglify())
         .pipe(gulp.dest(target + '/js'));
+
+//    gulp.src('js/index.js')
+//        .pipe(concatScript())
+//        .pipe(gulp.dest(target + '/js'));
 });
 
 gulp.task('default', ['copy', 'html', 'css', 'js']);

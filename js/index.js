@@ -28,9 +28,10 @@ $(function () {
         },
         baseUrl: '',
         key: '',
+        user: {},
         unreadList: {},
-        users: [],
-        selections: []
+        selections: [],
+        avatars: {}
     };
 
     window.formatter = {
@@ -78,17 +79,12 @@ $(function () {
                 moment(new Date(value)).fromNow());
         },
         avatar: function (user) {
-            var img = '';
-            $.each(models.users, function (i, u) {
-                if (u.id === user.id) {
-                    img = sprintf('http://www.gravatar.com/avatar/%s?rating=PG&size=48&default=wavatar',
-                        md5(u.mail));
-                    return false;
-                }
-                return true;
-            });
-            return sprintf('<img title="%s" class="avatar" data-src="%s" data-toggle="tooltip">',
-                user.name, img);
+            if (models.avatars[user.id]) {
+                return sprintf('<img title="%s" class="avatar" src="%s" data-toggle="tooltip">',
+                    user.name, models.avatars[user.id]);
+            }
+            return sprintf('<img title="%s" class="avatar" data-user-id="%s" data-src="%s" data-toggle="tooltip">',
+                user.name, user.id, user.id);
         }
     };
 
@@ -119,20 +115,39 @@ $(function () {
         },
         loadImages: function ($els) {
             $els.each(function () {
-                var $this = $(this),
-                    xhr = new XMLHttpRequest();
+                var $this = $(this);
 
                 if (!$this.data('src')) {
                     return;
                 }
-                xhr.open('get', $(this).data('src'), true);
-                xhr.responseType = 'blob';
-                xhr.onload = function(e) {
-                    $this.attr('src', window.URL.createObjectURL(this.response));
-                    $this.removeAttr('data-src');
-                };
-                xhr.send();
+                if ($this.data('userId')) {
+                    $.get(sprintf('%s/users/%s.json', models.baseUrl, $this.data('userId')), {
+                        key: models.key
+                    }, function (res) {
+                        $this.data('src',
+                            sprintf('http://www.gravatar.com/avatar/%s?rating=PG&size=48&default=wavatar',
+                            md5(res.user.mail)));
+                        util.loadImage($this);
+                    }).fail(function () {
+                        $this.data('src', 'http://www.gravatar.com/avatar/?rating=PG&size=48&default=wavatar');
+                        util.loadImage($this);
+                    });
+                } else {
+                    util.loadImage($this);
+                }
             });
+        },
+        loadImage: function ($el) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('get', $el.data('src'), true);
+            xhr.responseType = 'blob';
+            xhr.onload = function(e) {
+                var src = window.URL.createObjectURL(this.response);
+                $el.attr('src', src);
+                $el.removeAttr('data-src');
+                models.avatars[$el.data('userId')] = src;
+            };
+            xhr.send();
         }
     };
 
@@ -180,7 +195,7 @@ $(function () {
                 models.baseUrl = url;
                 models.key = $.trim($key.val());
                 util.updateStorage();
-                view.users();
+                view.init();
             });
 
             $(window).resize(function () {
@@ -232,16 +247,11 @@ $(function () {
     };
 
     window.view = {
-        users: function (limit) {
-            $.get(sprintf('%s/users.json', models.baseUrl), {
-                limit: limit || 100,
+        user: function () {
+            $.get(sprintf('%s/users/current.json', models.baseUrl), {
                 key: models.key
-            }, function (data) {
-                if (data.total_count > limit) {
-                    view.users(data.total_count);
-                    return;
-                }
-                models.users = data.users;
+            }, function (res) {
+                models.user = res.user;
                 view.init();
             }).fail(function () {
                 $loading.hide();
@@ -316,5 +326,5 @@ $(function () {
     };
 
     events.init();
-    models.init(view.users);
+    models.init(view.user);
 });
