@@ -1,5 +1,9 @@
 'use strict';
 
+$.ajaxSetup({
+    timeout: 5000
+});
+
 $(function () {
     var $loading = $('#loading'),
         $settings = $('.settings'),
@@ -17,12 +21,16 @@ $(function () {
         init: function (callback) {
             chrome.storage.local.get('redmine', function (obj) {
                 if (obj.redmine) {
-                    models.baseUrl = obj.redmine.url;
-                    models.key = obj.redmine.key;
-                    models.unreadList = obj.redmine.unreadList;
+                    models.baseUrl = obj.redmine.url || models.url;
+                    models.key = obj.redmine.key || models.key;
+                    models.unreadList = obj.redmine.unreadList || models.unreadList;
+                    models.params = obj.redmine.params || models.params;
                 }
                 $url.val(models.baseUrl);
                 $key.val(models.key);
+                $status.val(models.params.status_id.split('|'));
+                $assignedToMe.prop('checked', models.params.assigned_to_id === 'me');
+                $table.data('pageSize', models.params.limit);
                 callback();
             });
         },
@@ -31,7 +39,12 @@ $(function () {
         user: {},
         unreadList: {},
         selections: [],
-        avatars: {}
+        avatars: {},
+        params: {
+            status_id: '1|2|7|4',
+            assigned_to_id: undefined,
+            limit: 25
+        }
     };
 
     window.formatter = {
@@ -97,7 +110,8 @@ $(function () {
                 redmine: {
                     url: models.baseUrl,
                     key: models.key,
-                    unreadList: models.unreadList
+                    unreadList: models.unreadList,
+                    params: models.params
                 }
             });
         },
@@ -164,9 +178,13 @@ $(function () {
                 limit: params.limit,
                 offset: params.offset
             };
-            if ($assignedToMe.is(':checked')) {
+            if ($assignedToMe.prop('checked')) {
                 params.assigned_to_id = 'me';
             }
+            // save status, assigned, limit
+            models.params = params;
+            util.updateStorage();
+
             return params;
         },
         response: function (res) {
@@ -238,6 +256,11 @@ $(function () {
                     util[func](issue);
                 });
                 $table.bootstrapTable('refresh', {silent: true});
+            });
+
+            $('#options').click(function () {
+                $settings.show();
+                $main.hide();
             });
         },
         subject: {
